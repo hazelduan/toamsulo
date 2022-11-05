@@ -23,15 +23,15 @@
 
 /* PARAMETERS OF THE TOMASULO'S ALGORITHM */
 
-#define INSTR_QUEUE_SIZE         10
+#define INSTR_QUEUE_SIZE         16
 
-#define RESERV_INT_SIZE    4
-#define RESERV_FP_SIZE     2
-#define FU_INT_SIZE        2
+#define RESERV_INT_SIZE    5
+#define RESERV_FP_SIZE     3
+#define FU_INT_SIZE        3
 #define FU_FP_SIZE         1
 
-#define FU_INT_LATENCY     4
-#define FU_FP_LATENCY      9
+#define FU_INT_LATENCY     5
+#define FU_FP_LATENCY      7
 
 /* IDENTIFYING INSTRUCTIONS */
 
@@ -115,10 +115,20 @@ static int fetch_index = 0;
  * 	True: if simulation is finished
  */
 static bool is_simulation_done(counter_t sim_insn) {
+  bool is_done;
+  bool is_IFQ_done = (instr_queue[INSTR_QUEUE_SIZE] == NULL);
+  bool is_RS_done = (reservINT[RESERV_INT_SIZE]== NULL) & (reservFP[RESERV_FP_SIZE] == NULL);
+  bool is_FU_done = (fuINT[FU_INT_SIZE] == NULL) & (fuFP[FU_FP_SIZE] == NULL);
+  bool is_CDB_done = (commonDataBus == NULL);
+  bool is_MT_done = (map_table[MD_TOTAL_REGS] == NULL);
+  if (is_IFQ_done && is_RS_done && is_FU_done && is_CDB_done && is_MT_done){
+    is_done = true;
+  } else{
+    is_done = false;
+  }
+  //all tomasulo structure is empty and then the simulation is done
 
-  /* ECE552: YOUR CODE GOES HERE */
-
-  return true; //ECE552: you can change this as needed; we've added this so the code provided to you compiles
+  return is_done; //ECE552: you can change this as needed; we've added this so the code provided to you compiles
 }
 
 /* 
