@@ -140,6 +140,42 @@ static bool is_simulation_done(counter_t sim_insn) {
  * 	None
  */
 void CDB_To_retire(int current_cycle) {
+  int i, j;
+  if (commonDataBus != NULL) {
+    if (current_cycle == commonDataBus->tom_cdb_cycle) {   
+        
+      for (i = 0; i <= RESERV_FP_SIZE; i++) {
+        if (reservFP[i] == commonDataBus) {
+          reservFP[i] = NULL;
+          continue;
+        }
+        for (j = 0; j < 3; j++) {
+          if (reservFP[i]->Q[j] == commonDataBus) {
+            reservFP[i]->Q[j] = NULL;
+          }//update FP RS Qj
+        }
+      }//update FP RS
+      for (i = 0; i <= RESERV_INT_SIZE; i++) {
+        if (reservINT[i] == commonDataBus) {
+          reservINT[i] = NULL;
+          continue;
+        }
+        for (j = 0; j < 3; j++) {
+          if (reservINT[i]->Q[j] == commonDataBus) {
+            reservINT[i]->Q[j] = NULL;
+          }//update INT RS Qj
+        }
+      }// update INT RS
+      for (i = 0; i < MD_TOTAL_REGS; i++) {
+        if (map_table[i] == commonDataBus) {
+          map_table[i] = NULL
+        }
+      }//update map table
+    }
+    
+  }
+  
+  
 
   /* ECE552: YOUR CODE GOES HERE */
 
