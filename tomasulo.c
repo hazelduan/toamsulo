@@ -142,9 +142,9 @@ static bool is_simulation_done(counter_t sim_insn) {
 void CDB_To_retire(int current_cycle) {
   int i, j;
   if (commonDataBus != NULL) {
-    if (current_cycle == commonDataBus->tom_cdb_cycle) {   
+    if (current_cycle >= commonDataBus->tom_cdb_cycle + 1) {  //maybe 2 insns W in the same stage and need to stall for broadcast 
         
-      for (i = 0; i <= RESERV_FP_SIZE; i++) {
+      for (i = 0; i < RESERV_FP_SIZE; i++) {
         if (reservFP[i] == commonDataBus) {
           reservFP[i] = NULL;
           continue;
@@ -155,7 +155,7 @@ void CDB_To_retire(int current_cycle) {
           }//update FP RS Qj
         }
       }//update FP RS
-      for (i = 0; i <= RESERV_INT_SIZE; i++) {
+      for (i = 0; i < RESERV_INT_SIZE; i++) {
         if (reservINT[i] == commonDataBus) {
           reservINT[i] = NULL;
           continue;
