@@ -164,14 +164,9 @@ void CDB_To_retire(int current_cycle) {
           map_table[i] = NULL
         }
       }//update map table
-    }
-    
+    } 
   }
-  
-  
-
   /* ECE552: YOUR CODE GOES HERE */
-
 }
 
 
@@ -184,8 +179,20 @@ void CDB_To_retire(int current_cycle) {
  * 	None
  */
 void execute_To_CDB(int current_cycle) {
-
-  /* ECE552: YOUR CODE GOES HERE */
+//separate to INT and FP 
+  int i;
+  for (i = 0; i < FU_FP_SIZE; i++){
+    if (current_cycle == fuFP[i]->tom_execute_cycle + FU_FP_LATENCY ) {
+      commonDataBus = fuFP[i];
+      fuFP[i] = NULL;
+    }
+  }
+  for (i = 0; i < FU_INT_SIZE; i++) {
+    if (current_cycle == fuINT[i]->tom_execute_cycle + FU_INT_LATENCY ) {
+      commonDataBus = fuINT[i];
+      fuINT[i] = NULL;
+    }
+  }
 
 }
 
