@@ -180,20 +180,54 @@ void CDB_To_retire(int current_cycle) {
  */
 void execute_To_CDB(int current_cycle) {
 //separate to INT and FP 
-  int i;
+  int i, j;
+  int oldest_num = 0, oldest_FP = 0, oldest_INT = 0;
+  instruction_t* insn_FU_oldest;
+  instruction_t* insn_FP_oldest;
+  instruction_t* insn_INT_oldest;
+  instruction_t* insn_current;
+  insn_FU_oldest = fuFP[0];//initialize oldest
   for (i = 0; i < FU_FP_SIZE; i++){
-    if (current_cycle == fuFP[i]->tom_execute_cycle + FU_FP_LATENCY ) {
-      commonDataBus = fuFP[i];
-      fuFP[i] = NULL;
+    if (current_cycle >= fuFP[i]->tom_execute_cycle + FU_FP_LATENCY ) { //maybe wait for CDB in use
+      insn_current = fuFP[i];
+      if (insn_current->index < insn_FP_oldest->index) {
+        insn_FP_oldest = insn_current;
+        oldest_FP = i;
+      }
     }
   }
   for (i = 0; i < FU_INT_SIZE; i++) {
-    if (current_cycle == fuINT[i]->tom_execute_cycle + FU_INT_LATENCY ) {
-      commonDataBus = fuINT[i];
-      fuINT[i] = NULL;
+    if (current_cycle >= fuINT[i]->tom_execute_cycle + FU_INT_LATENCY ) {// maybe wait for CDB in use
+      if (WRITES_CDB(fuINT[i]->op)) {
+        insn_current = fuINT[i];
+        if (insn_current->index < insn_INT_oldest->index) {
+          insn_INT_oldest = insn_current;
+          oldest_INT = i;
+        }
+      } else { //store, don't need CDB, retire
+        for (j = 0; j < RESERV_INT_SIZE; j++ ) {
+          if (reservINT[j] == fuINT[i]) {
+            reservINT[j] =0;
+          }
+        }
+        fuINT[i] = 0;//maybe move it to push to CDB?
+      }
     }
   }
-
+  //to CDB, clear the insn in FU
+  if (insn_INT_oldest->index < insn_FP_oldest->index) {
+    insn_FU_oldest = insn_INT_oldest;
+    oldest_num = oldest_INT;
+    commonDataBus = insn_FU_oldest;
+    commonDataBus->tom_cdb_cycle = current_cycle;
+    fuINT[oldest_num] = NULL;
+  } else {
+    insn_FU_oldest = insn_FP_oldest;
+    oldest_num = oldest_FP;
+    commonDataBus = insn_FU_oldest;
+    commonDataBus->tom_cdb_cycle = current_cycle;
+    fuFP[oldest_num] = NULL;
+  }
 }
 
 /* 
