@@ -171,8 +171,8 @@ void CDB_To_retire(int current_cycle) {
           map_table[i] = NULL
         }
       }//update map table
+      commonDataBus = NULL
     }
-    
   }
   
   
