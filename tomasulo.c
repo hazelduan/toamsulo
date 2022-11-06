@@ -116,19 +116,12 @@ static int fetch_index = 0;
  */
 static bool is_simulation_done(counter_t sim_insn) {
   bool is_done;
-  bool is_IFQ_done = (instr_queue[INSTR_QUEUE_SIZE] == NULL);
-  bool is_RS_done = (reservINT[RESERV_INT_SIZE]== NULL) & (reservFP[RESERV_FP_SIZE] == NULL);
-  bool is_FU_done = (fuINT[FU_INT_SIZE] == NULL) & (fuFP[FU_FP_SIZE] == NULL);
-  bool is_CDB_done = (commonDataBus == NULL);
-  bool is_MT_done = (map_table[MD_TOTAL_REGS] == NULL);
-  if (is_IFQ_done && is_RS_done && is_FU_done && is_CDB_done && is_MT_done){
+  if ((fetch_index == sim_insn) && (instr_queue_size == 0)) {
     is_done = true;
-  } else{
+  } else {
     is_done = false;
-  }
-  //all tomasulo structure is empty and then the simulation is done
-
-  return is_done; //ECE552: you can change this as needed; we've added this so the code provided to you compiles
+  }//the num of insn is exactly the last fetch one and it is executed completely, then the simulation is completely done.
+  return is_done;//ECE552: you can change this as needed; we've added this so the code provided to you compiles
 }
 
 /* 
@@ -171,14 +164,10 @@ void CDB_To_retire(int current_cycle) {
           map_table[i] = NULL
         }
       }//update map table
-      commonDataBus = NULL
+      commonDataBus = NULL;
     }
   }
-  
-  
-
   /* ECE552: YOUR CODE GOES HERE */
-
 }
 
 
@@ -191,8 +180,20 @@ void CDB_To_retire(int current_cycle) {
  * 	None
  */
 void execute_To_CDB(int current_cycle) {
-
-  /* ECE552: YOUR CODE GOES HERE */
+//separate to INT and FP 
+  int i;
+  for (i = 0; i < FU_FP_SIZE; i++){
+    if (current_cycle == fuFP[i]->tom_execute_cycle + FU_FP_LATENCY ) {
+      commonDataBus = fuFP[i];
+      fuFP[i] = NULL;
+    }
+  }
+  for (i = 0; i < FU_INT_SIZE; i++) {
+    if (current_cycle == fuINT[i]->tom_execute_cycle + FU_INT_LATENCY ) {
+      commonDataBus = fuINT[i];
+      fuINT[i] = NULL;
+    }
+  }
 
 }
 
