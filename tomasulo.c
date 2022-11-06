@@ -23,7 +23,7 @@
 
 /* PARAMETERS OF THE TOMASULO'S ALGORITHM */
 
-#define INSTR_QUEUE_SIZE         16
+#define INSTR_QUEUE_SIZE   16
 
 #define RESERV_INT_SIZE    5
 #define RESERV_FP_SIZE     3
@@ -255,8 +255,73 @@ void execute_To_CDB(int current_cycle) {
  * 	None
  */
 void issue_To_execute(int current_cycle) {
-
-  /* ECE552: YOUR CODE GOES HERE */
+//separate to FP and INT
+  int i, j;
+  bool operands_ready = true;
+  //instruction_t* oldest_to_exe = NULL;
+  instruction_t* oldest_to_exe_FP = NULL;
+  instruction_t* oldest_to_exe_INT = NULL;
+//find the oldest insn ready to exe
+  for (i = 0; i < RESERV_FP_SIZE; i++) {
+    if (current_cycle >= reservFP[i]->tom_issue_cycle + 1) {
+      for (j = 0; j < 3; j++) {
+        if (reservFP[i]->Q[j] != NULL) {
+          if (commonDataBus != reservFP[i]->Q[j]) {
+            operands_ready = false;
+            break;
+          }
+        }
+      }
+      if (operands_ready) {
+        if (oldest_to_exe_FP == NULL) {
+          oldest_to_exe_FP = reservFP[i];
+        } else {
+          if (reservFP[i]->index < oldest_to_exe_FP->index) {
+            oldest_to_exe_FP = reservFP[i];
+          }
+        }
+      
+      }
+    }   
+  }
+  for (i = 0; i < RESERV_INT_SIZE; i++) {
+    if (current_cycle >= reservINT[i]->tom_issue_cycle + 1) {
+      for (j = 0; j < 3; j++) {
+        if (reservINT[i]->Q[j] != NULL) {
+          if (commonDataBus != reservINT[i]->Q[j]) {
+            operands_ready = false;
+            break;
+          }
+        }
+      }
+      if (operands_ready) {
+        if (oldest_to_exe_INT == NULL) {
+          oldest_to_exe_INT = reservFP[i];
+        } else {
+          if (reservFP[i]->index < oldest_to_exe_INT->index) {
+            oldest_to_exe_INT = reservFP[i];
+          }
+        }
+      }
+    } 
+  }
+  //push to FU
+  for (i = 0; i < FU_FP_SIZE; i++) {
+    if (fuFP[i] == NULL) {
+      if (oldest_to_exe_FP != NULL) {
+        fuFP[i] = oldest_to_exe_FP;
+        fuFP[i]->tom_execute_cycle = current_cycle;
+      }
+    }
+  }
+  for (i = 0; i < FU_INT_SIZE; i++) {
+    if (fuINT[i] == NULL) {
+      if (oldest_to_exe_INT != NULL) {
+        fuINT[i] = oldest_to_exe_INT;
+        fuINT[i]->tom_execute_cycle = current_cycle;
+      }
+    }
+  }
 }
 
 /* 
