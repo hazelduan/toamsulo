@@ -186,23 +186,34 @@ void execute_To_CDB(int current_cycle) {
   instruction_t* insn_FP_oldest;
   instruction_t* insn_INT_oldest;
   instruction_t* insn_current;
-  insn_FU_oldest = fuFP[0];//initialize oldest
+  insn_FU_oldest = NULL;//initialize oldest as NULL
+  insn_FP_oldest = NULL;
+  insn_INT_oldest = NULL;
+
   for (i = 0; i < FU_FP_SIZE; i++){
     if (current_cycle >= fuFP[i]->tom_execute_cycle + FU_FP_LATENCY ) { //maybe wait for CDB in use
       insn_current = fuFP[i];
-      if (insn_current->index < insn_FP_oldest->index) {
+      if (insn_FP_oldest == NULL) {
+        insn_FP_oldest = fuFP[i];
+      } else {
+        if (insn_current->index < insn_FP_oldest->index) {
         insn_FP_oldest = insn_current;
         oldest_FP = i;
-      }
+        }
+      } 
     }
   }
   for (i = 0; i < FU_INT_SIZE; i++) {
     if (current_cycle >= fuINT[i]->tom_execute_cycle + FU_INT_LATENCY ) {// maybe wait for CDB in use
       if (WRITES_CDB(fuINT[i]->op)) {
         insn_current = fuINT[i];
-        if (insn_current->index < insn_INT_oldest->index) {
+        if (insn_INT_oldest == NULL) {
+          insn_INT_oldest = fuINT[i];
+        } else {
+          if (insn_current->index < insn_INT_oldest->index) {
           insn_INT_oldest = insn_current;
           oldest_INT = i;
+          }
         }
       } else { //store, don't need CDB, retire
         for (j = 0; j < RESERV_INT_SIZE; j++ ) {
@@ -215,18 +226,20 @@ void execute_To_CDB(int current_cycle) {
     }
   }
   //to CDB, clear the insn in FU
-  if (insn_INT_oldest->index < insn_FP_oldest->index) {
-    insn_FU_oldest = insn_INT_oldest;
-    oldest_num = oldest_INT;
-    commonDataBus = insn_FU_oldest;
-    commonDataBus->tom_cdb_cycle = current_cycle;
-    fuINT[oldest_num] = NULL;
-  } else {
-    insn_FU_oldest = insn_FP_oldest;
-    oldest_num = oldest_FP;
-    commonDataBus = insn_FU_oldest;
-    commonDataBus->tom_cdb_cycle = current_cycle;
-    fuFP[oldest_num] = NULL;
+  if (commonDataBus == NULL) {
+    if (insn_INT_oldest->index < insn_FP_oldest->index) {
+      insn_FU_oldest = insn_INT_oldest;
+      oldest_num = oldest_INT;
+      commonDataBus = insn_FU_oldest;
+      commonDataBus->tom_cdb_cycle = current_cycle;
+      fuINT[oldest_num] = NULL;
+    } else {
+      insn_FU_oldest = insn_FP_oldest;
+      oldest_num = oldest_FP;
+      commonDataBus = insn_FU_oldest;
+      commonDataBus->tom_cdb_cycle = current_cycle;
+      fuFP[oldest_num] = NULL;
+    }
   }
 }
 
